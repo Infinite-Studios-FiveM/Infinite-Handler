@@ -1,5 +1,7 @@
 Infinite = Infinite or {};
 Infinite.Config = Infinite.Config or {};
+local ESX = nil;
+local QBCore = nil;
 
 local Character = {};
 local Token = 'Neek'
@@ -23,3 +25,36 @@ function GetCurrentCharacter()
 end
 
 exports('GetCurrentCharacter', GetCurrentCharacter)
+
+Citizen.CreateThread(function()
+    if Infinite.Config.Framework == 'qb-core' then
+        QBCore = exports['qb-core']:GetCoreObject()
+    elseif Infinite.Config.Framework == 'qbox' then
+        QBCore = exports['qbox-core']:GetCoreObject()
+    elseif Infinite.Config.Framework == 'esx' then
+        while ESX == nil do
+            TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+            Citizen.Wait(0)
+        end
+    end
+end)
+
+--[[
+    ESX Exports
+]]
+
+if Infinite.Config.Framework == 'esx' then
+    local function ObtainItemList() 
+        return TriggerServerCallback('infinite-handler:ObtainItemList')
+    end
+
+    exports('GetItemList', ObtainItemList)
+end
+
+if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox' then
+    local function ObtainItemList() 
+        return QBCore.Shared.Items
+    end
+
+    exports('GetItemList', ObtainItemList)
+end

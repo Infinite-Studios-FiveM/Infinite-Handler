@@ -161,3 +161,38 @@ end)
 RegisterServerCallback('infinite-framework:ObtainCharacter', function(source)
     return GetCurrentCharacter(source)
 end)
+
+--[[
+    ESX Exports
+]]
+
+
+if Infinite.Config.Framework == 'esx' then
+    local function ObtainItemList() 
+        local result = exports.oxmysql:executeSync('SELECT * FROM items')
+        local itemList = {}
+
+        for _, item in pairs(result) do
+            itemList[item.name] = {
+                name = item.name,
+                label = item.label,
+                weight = (item.weight or 1), -- Convert to grams if you want QBCore-style
+                type = item.type or "item",       -- Default to "item"
+                image = item.name .. ".png",      -- Assumes icon name matches item name
+                unique = false,                   -- ESX doesn't use this, default to false
+                useable = item.usable or false,
+                shouldClose = true,               -- Assumed behavior
+                combinable = nil,                 -- Optional for custom logic
+                description = item.label          -- Fallback description using label
+            }
+        end
+    
+        return itemList
+    end
+
+    exports('ObtainItemList', ObtainItemList)
+
+    RegisterServerCallback('infinite-handler:ObtainItemList', function(source)
+        return ObtainItemList()
+    end)
+end
