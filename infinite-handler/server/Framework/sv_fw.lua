@@ -3,7 +3,9 @@ Infinite.Anticheat = Infinite.Anticheat or {};
 Infinite.Anticheat.Token = Infinite.Anticheat.Token or nil;
 Infinite.Config = Infinite.Config or {};
 Infinite.Config.DevelopmentMode = Infinite.Config.DevelopmentMode or false;
-QBCore = QBCore or exports['qb-core']:GetCoreObject();
+local ESX = nil;
+local QBCore = nil;
+-- QBCore = QBCore or exports['qb-core']:GetCoreObject();
 
 Infinite.Anticheat.GenerateToken = function()
     local letters = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'}
@@ -166,8 +168,8 @@ end)
     ESX Exports
 ]]
 
-
 if Infinite.Config.Framework == 'esx' then
+    ESX = exports['es_extended']:getSharedObject()
     local function ObtainItemList() 
         local result = exports.oxmysql:executeSync('SELECT * FROM items')
         local itemList = {}
@@ -195,4 +197,89 @@ if Infinite.Config.Framework == 'esx' then
     RegisterServerCallback('infinite-handler:ObtainItemList', function(source)
         return ObtainItemList()
     end)
+
+    local function GiveItem(src, item, amount, metaData)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+    
+        -- ESX supports basic metadata as part of `info` parameter if the inventory system supports it
+        -- But most core ESX systems only use `item`, `count`
+        xPlayer.addInventoryItem(item, amount)
+    end
+    
+    local function RemoveItem(src, item, amount)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+    
+        xPlayer.removeInventoryItem(item, amount)
+    end
+    
+    local function HasItem(src, item, amount)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return false end
+    
+        local invItem = xPlayer.getInventoryItem(item)
+        if not invItem or invItem.count < amount then
+            return false
+        end
+    
+        return true
+    end    
+
+    exports('GiveItem', GiveItem)
+    exports('RemoveItem', RemoveItem)
+    exports('HasItem', HasItem)
+end
+
+--[[
+    QBCore Exports
+]]
+if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox' then
+    local function ObtainItemList() 
+        return QBCore.Shared.Items
+    end
+
+    exports('ObtainItemList', ObtainItemList)
+
+    RegisterServerCallback('infinite-handler:ObtainItemList', function(source)
+        return ObtainItemList()
+    end)
+
+    local function GiveItem(src, item, amount, metaData)
+        -- ox_inventory:
+        --[[
+            exports['ox_inventory']:AddItem(src, item, amount, metaData)
+        ]]
+
+        -- qb-inventory:
+        exports['qb-inventory']:AddItem(src, item, amount, false, metaData or false, 'infinite-handler:GiveItem') -- Add the item to the player inventory.
+    end
+
+    local function RemoveItem(src, item, amount)
+        -- ox_inventory:
+        --[[
+            exports['ox_inventory']:RemoveItem(src, item, amount)
+        ]]
+
+        -- qb-inventory:
+        exports['qb-inventory']:RemoveItem(src, item, amount) -- Remove the item from the player inventory.
+    end
+
+    local function HasItem(src, item, amount)
+        -- ox_inventory:
+        --[[
+            return exports['ox_inventory']:Search(src, 'count', item) >= amount
+        ]]
+
+        -- qb-inventory:
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        local targetPlayerItem = player.Functions.GetItemByName(item);
+        if not targetPlayerItem then return false end -- If the item is not found, return false.
+
+        return targetPlayerItem.amount >= amount -- Check if the player has the item.
+    end
+    
+    exports('GiveItem', GiveItem)
+    exports('RemoveItem', RemoveItem)
+    exports('HasItem', HasItem)
 end

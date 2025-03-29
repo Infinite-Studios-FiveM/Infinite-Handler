@@ -1,5 +1,3 @@
-local QBCore = exports['qb-core']:GetCoreObject()
-
 RegisterCommand('coords', function(source, args)
     local arg = args[1]
     local coords = GetEntityCoords(PlayerPedId())
@@ -24,5 +22,5 @@ RegisterCommand('coords', function(source, args)
         })
     end
 
-    QBCore.Functions.Notify("Coords have been copied to clipboard", "success")
+    -- QBCore.Functions.Notify("Coords have been copied to clipboard", "success")
 end)

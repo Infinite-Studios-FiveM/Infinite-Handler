@@ -32,10 +32,7 @@ Citizen.CreateThread(function()
     elseif Infinite.Config.Framework == 'qbox' then
         QBCore = exports['qbox-core']:GetCoreObject()
     elseif Infinite.Config.Framework == 'esx' then
-        while ESX == nil do
-            TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-            Citizen.Wait(0)
-        end
+        ESX = exports['es_extended']:getSharedObject()
     end
 end)
 
@@ -49,6 +46,10 @@ if Infinite.Config.Framework == 'esx' then
     end
 
     exports('GetItemList', ObtainItemList)
+
+    RegisterNetEvent('immense-handler:PerformNotification', function(message, type)
+        ESX.ShowNotification(message, type)
+    end)
 end
 
 if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox' then
