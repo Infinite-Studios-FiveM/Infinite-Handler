@@ -235,6 +235,7 @@ end
     QBCore Exports
 ]]
 if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox' then
+    QBCore = exports['qb-core']:GetCoreObject()
     local function ObtainItemList() 
         return QBCore.Shared.Items
     end
