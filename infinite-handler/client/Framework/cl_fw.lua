@@ -50,6 +50,16 @@ if Infinite.Config.Framework == 'esx' then
     RegisterNetEvent('immense-handler:PerformNotification', function(message, type)
         ESX.ShowNotification(message, type)
     end)
+
+    local function GetJobData()
+        -- returns job and grade
+        local playerData = ESX.GetPlayerData()
+        local job = playerData.job.name
+        local grade = playerData.job.grade.level
+        return {job = job, grade = grade}
+    end
+
+    exports('GetJobData', GetJobData)
 end
 
 if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox' then
@@ -58,4 +68,14 @@ if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox'
     end
 
     exports('GetItemList', ObtainItemList)
+
+    local function GetJobData()
+        -- returns job and grade
+        local playerData = QBCore.Functions.GetPlayerData()
+        local job = playerData.job.name
+        local grade = playerData.job.grade.level
+        return {job = job, grade = grade}
+    end
+
+    exports('GetJobData', GetJobData)
 end
