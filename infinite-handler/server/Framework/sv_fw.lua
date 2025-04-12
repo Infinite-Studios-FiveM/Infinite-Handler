@@ -22,146 +22,15 @@ local function GetAnticheatToken()
     return Infinite.Anticheat.Token;
 end
 
-local function GetCurrentCharacter(source) -- Gets the current character of the player by source or returns false.
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    local parsedChar = {
-        id = player.PlayerData.citizenid,
-        first_name = player.PlayerData.charinfo.firstname,
-        last_name = player.PlayerData.charinfo.lastname,
-        job = player.PlayerData.job.name,
-        rank = player.PlayerData.job.grade.level,
-        cash = player.PlayerData.money.cash,
-        bank = player.PlayerData.money.bank,
-        gender = player.PlayerData.charinfo.gender
-    }
-
-    return parsedChar;
-end
-
-local function GetUserFromCID(citizenid)
-    local player = QBCore.Functions.GetPlayerByCitizenId(citizenid)
-    if not player then return {character = false} end
-
-    return {
-        character = {
-            id = player.PlayerData.citizenid,
-            first_name = player.PlayerData.charinfo.firstname,
-            last_name = player.PlayerData.charinfo.lastname,
-            job = player.PlayerData.job.name,
-            rank = player.PlayerData.job.grade.level,
-            cash = player.PlayerData.money.cash,
-            bank = player.PlayerData.money.bank,
-            gender = player.PlayerData.charinfo.gender
-        },
-        source = player.PlayerData.source,
-    }
-end
-
-local function SetRank(source, rank)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    player.Functions.SetJob(player.PlayerData.job.name, rank)
-    player.Functions.Save()
-end
-
-local function SetJob(source, job)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    player.Functions.SetJob(job, player.PlayerData.job.grade.level)
-    player.Functions.Save()
-end
-
-local function RemoveBank(source, amount)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    player.Functions.RemoveMoney('bank', amount)
-    player.Functions.Save()
-end
-
-local function RemoveCash(source, amount)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    player.Functions.RemoveMoney('cash', amount)
-    player.Functions.Save()
-end
-
-local function AddBank(source, amount)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    player.Functions.AddMoney('bank', amount)
-    player.Functions.Save()
-end
-
-local function AddCash(source, amount)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    player.Functions.AddMoney('cash', amount)
-    player.Functions.Save()
-end
-
-local function GetBank(source)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    return player.PlayerData.money.bank;
-end
-
-local function GetCash(source)
-    local src = source;
-    local player = QBCore.Functions.GetPlayer(src)
-
-    if not player then return false end
-
-    return player.PlayerData.money.cash;
-end
-
 Citizen.CreateThread(function()
     Infinite.Anticheat.GenerateToken()
 end)
 
 exports('GetDevMode', GetDevMode)
 exports('GetAnticheatToken', GetAnticheatToken)
-exports('GetCurrentCharacter', GetCurrentCharacter)
-exports('GetUserFromCID', GetUserFromCID)
-exports('SetRank', SetRank)
-exports('SetJob', SetJob)
-exports('RemoveBank', RemoveBank)
-exports('RemoveCash', RemoveCash)
-exports('AddBank', AddBank)
-exports('AddCash', AddCash)
-exports('GetBank', GetBank)
-exports('GetCash', GetCash)
 
 RegisterServerEvent('infinite-framework:obtainToken', function()
     TriggerClientEvent('infinite-framework:obtainToken', source, Infinite.Anticheat.Token)
-end)
-
-RegisterServerCallback('infinite-framework:ObtainCharacter', function(source)
-    return GetCurrentCharacter(source)
 end)
 
 --[[
@@ -226,9 +95,57 @@ if Infinite.Config.Framework == 'esx' then
         return true
     end    
 
+    local function ObtainMoneyType(src, moneyType)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+
+        if moneyType == 'cash' then
+            return xPlayer.getMoney()
+        elseif moneyType == 'bank' then
+            return xPlayer.getAccount('bank').money
+        elseif moneyType == 'black_money' then
+            return xPlayer.getAccount('black_money').money
+        end
+
+        return 0 -- Default to 0 if no valid type is found
+    end
+
+    local function RemoveMoneyType(src, moneyType, amount)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+
+        if moneyType == 'cash' then
+            xPlayer.removeMoney(amount)
+        elseif moneyType == 'bank' then
+            xPlayer.removeAccountMoney('bank', amount)
+        elseif moneyType == 'black_money' then
+            xPlayer.removeAccountMoney('black_money', amount)
+        end
+    end
+
+    local function GiveMoneyType(src, moneyType, amount)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+
+        if moneyType == 'cash' then
+            xPlayer.addMoney(amount)
+        elseif moneyType == 'bank' then
+            xPlayer.addAccountMoney('bank', amount)
+        elseif moneyType == 'black_money' then
+            xPlayer.addAccountMoney('black_money', amount)
+        end
+    end
+
+    RegisterServerCallback('infinite-handler:ObtainPlayerCash', function(source)
+        return ObtainMoneyType(source, 'cash')
+    end)
+
     exports('GiveItem', GiveItem)
     exports('RemoveItem', RemoveItem)
     exports('HasItem', HasItem)
+    exports('ObtainMoneyType', ObtainMoneyType)
+    exports('RemoveMoneyType', RemoveMoneyType)
+    exports('GiveMoneyType', GiveMoneyType)
 end
 
 --[[
@@ -279,8 +196,56 @@ if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox'
 
         return targetPlayerItem.amount >= amount -- Check if the player has the item.
     end
+
+    local function ObtainMoneyType(src, moneyType)
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        if not player then return end
+
+        if moneyType == 'cash' then
+            return player.PlayerData.money['cash'] or 0
+        elseif moneyType == 'bank' then
+            return player.PlayerData.money['bank'] or 0
+        elseif moneyType == 'black_money' then
+            return player.PlayerData.money['black_money'] or 0
+        end
+
+        return 0 -- Default to 0 if no valid type is found
+    end
+
+    local function RemoveMoneyType(src, moneyType, amount)
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        if not player then return end
+
+        if moneyType == 'cash' then
+            player.Functions.RemoveMoney('cash', amount, 'infinite-handler:RemoveMoneyType')
+        elseif moneyType == 'bank' then
+            player.Functions.RemoveMoney('bank', amount, 'infinite-handler:RemoveMoneyType')
+        elseif moneyType == 'black_money' then
+            player.Functions.RemoveMoney('black_money', amount, 'infinite-handler:RemoveMoneyType')
+        end
+    end
+
+    local function GiveMoneyType(src, moneyType, amount)
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        if not player then return end
+
+        if moneyType == 'cash' then
+            player.Functions.AddMoney('cash', amount, 'infinite-handler:GiveMoneyType')
+        elseif moneyType == 'bank' then
+            player.Functions.AddMoney('bank', amount, 'infinite-handler:GiveMoneyType')
+        elseif moneyType == 'black_money' then
+            player.Functions.AddMoney('black_money', amount, 'infinite-handler:GiveMoneyType')
+        end
+    end
+
+    RegisterServerCallback('infinite-handler:ObtainPlayerCash', function(source)
+        return ObtainMoneyType(source, 'cash')
+    end )
     
     exports('GiveItem', GiveItem)
     exports('RemoveItem', RemoveItem)
     exports('HasItem', HasItem)
+    exports('ObtainMoneyType', ObtainMoneyType)
+    exports('RemoveMoneyType', RemoveMoneyType)
+    exports('GiveMoneyType', GiveMoneyType)
 end

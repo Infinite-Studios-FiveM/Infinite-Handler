@@ -19,13 +19,6 @@ Citizen.CreateThread(function()
     end
 end)
 
-function GetCurrentCharacter()
-    local result = TriggerServerCallback('infinite-framework:ObtainCharacter')
-    return result;
-end
-
-exports('GetCurrentCharacter', GetCurrentCharacter)
-
 Citizen.CreateThread(function()
     if Infinite.Config.Framework == 'qb-core' then
         QBCore = exports['qb-core']:GetCoreObject()
@@ -60,6 +53,12 @@ if Infinite.Config.Framework == 'esx' then
     end
 
     exports('GetJobData', GetJobData)
+
+    local function ObtainPlayerCash()
+        return TriggerServerCallback('infinite-handler:ObtainPlayerCash')
+    end
+
+    exports('GetPlayerCash', ObtainPlayerCash)
 end
 
 if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox' then
@@ -78,4 +77,10 @@ if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox'
     end
 
     exports('GetJobData', GetJobData)
+
+    local function ObtainPlayerCash()
+        return TriggerServerCallback('infinite-handler:ObtainPlayerCash')
+    end
+
+    exports('GetPlayerCash', ObtainPlayerCash)
 end
