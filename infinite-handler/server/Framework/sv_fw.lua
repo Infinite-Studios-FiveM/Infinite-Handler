@@ -136,6 +136,34 @@ if Infinite.Config.Framework == 'esx' then
         end
     end
 
+    local function GetCash(src)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+
+        return xPlayer.getMoney()
+    end
+
+    local function GetBank(src)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+
+        return xPlayer.getAccount('bank').money
+    end
+
+    local function RemoveCash(src, amount)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+
+        return xPlayer.removeMoney(amount)
+    end
+
+    local function RemoveBank(src, amount)
+        local xPlayer = ESX.GetPlayerFromId(src)
+        if not xPlayer then return end
+
+        return xPlayer.removeAccountMoney('bank', amount)
+    end
+
     RegisterServerCallback('infinite-handler:ObtainPlayerCash', function(source)
         return ObtainMoneyType(source, 'cash')
     end)
@@ -146,6 +174,10 @@ if Infinite.Config.Framework == 'esx' then
     exports('ObtainMoneyType', ObtainMoneyType)
     exports('RemoveMoneyType', RemoveMoneyType)
     exports('GiveMoneyType', GiveMoneyType)
+    exports('GetCash', GetCash)
+    exports('GetBank', GetBank)
+    exports('RemoveCash', RemoveCash)
+    exports('RemoveBank', RemoveBank)
 end
 
 --[[
@@ -238,9 +270,37 @@ if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox'
         end
     end
 
+    local function GetCash(src)
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        if not player then return end
+
+        return player.PlayerData.money['cash'] or 0
+    end
+
+    local function GetBank(src)
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        if not player then return end
+
+        return player.PlayerData.money['bank'] or 0
+    end
+
+    local function RemoveCash(src, amount)
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        if not player then return end
+
+        return player.Functions.RemoveMoney('cash', amount, 'infinite-handler:RemoveCash')
+    end
+
+    local function RemoveBank(src, amount)
+        local player = QBCore.Functions.GetPlayer(src) -- Get the player object.
+        if not player then return end
+
+        return player.Functions.RemoveMoney('bank', amount, 'infinite-handler:RemoveBank')
+    end
+
     RegisterServerCallback('infinite-handler:ObtainPlayerCash', function(source)
         return ObtainMoneyType(source, 'cash')
-    end )
+    end)
     
     exports('GiveItem', GiveItem)
     exports('RemoveItem', RemoveItem)
@@ -248,4 +308,8 @@ if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox'
     exports('ObtainMoneyType', ObtainMoneyType)
     exports('RemoveMoneyType', RemoveMoneyType)
     exports('GiveMoneyType', GiveMoneyType)
+    exports('GetCash', GetCash)
+    exports('GetBank', GetBank)
+    exports('RemoveCash', RemoveCash)
+    exports('RemoveBank', RemoveBank)
 end
