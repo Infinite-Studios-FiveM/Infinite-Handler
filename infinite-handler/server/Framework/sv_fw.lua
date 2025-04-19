@@ -164,6 +164,32 @@ if Infinite.Config.Framework == 'esx' then
         return xPlayer.removeAccountMoney('bank', amount)
     end
 
+    local function GetCurrentCharacter(source) -- Gets the current character of the player by source or returns false.
+        local src = source
+        local xPlayer = ESX.GetPlayerFromId(src)
+    
+        if not xPlayer then return false end
+    
+        local charInfo = xPlayer.get('character') or {}
+    
+        local parsedChar = {
+            id = xPlayer.identifier,
+            first_name = charInfo.firstName or "Unknown",
+            last_name = charInfo.lastName or "Unknown",
+            job = xPlayer.job.name,
+            rank = xPlayer.job.grade,
+            cash = xPlayer.getMoney(),
+            bank = xPlayer.getAccount('bank') and xPlayer.getAccount('bank').money or 0,
+            gender = charInfo.sex or "U"
+        }
+    
+        return parsedChar
+    end
+
+    RegisterServerCallback('infinite-framework:ObtainCharacter', function(source)
+        return GetCurrentCharacter(source)
+    end)
+
     RegisterServerCallback('infinite-handler:ObtainPlayerCash', function(source)
         return ObtainMoneyType(source, 'cash')
     end)
@@ -297,6 +323,30 @@ if Infinite.Config.Framework == 'qb-core' or Infinite.Config.Framework == 'qbox'
 
         return player.Functions.RemoveMoney('bank', amount, 'infinite-handler:RemoveBank')
     end
+
+    local function GetCurrentCharacter(source) -- Gets the current character of the player by source or returns false.
+        local src = source;
+        local player = QBCore.Functions.GetPlayer(src)
+    
+        if not player then return false end
+    
+        local parsedChar = {
+            id = player.PlayerData.citizenid,
+            first_name = player.PlayerData.charinfo.firstname,
+            last_name = player.PlayerData.charinfo.lastname,
+            job = player.PlayerData.job.name,
+            rank = player.PlayerData.job.grade.level,
+            cash = player.PlayerData.money.cash,
+            bank = player.PlayerData.money.bank,
+            gender = player.PlayerData.charinfo.gender
+        }
+    
+        return parsedChar;
+    end
+
+    RegisterServerCallback('infinite-framework:ObtainCharacter', function(source)
+        return GetCurrentCharacter(source)
+    end)
 
     RegisterServerCallback('infinite-handler:ObtainPlayerCash', function(source)
         return ObtainMoneyType(source, 'cash')
