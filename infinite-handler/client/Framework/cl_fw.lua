@@ -29,6 +29,13 @@ Citizen.CreateThread(function()
     end
 end)
 
+function GetCurrentCharacter()
+    local result = TriggerServerCallback('infinite-framework:ObtainCharacter')
+    return result;
+end
+
+exports('GetCurrentCharacter', GetCurrentCharacter
+
 --[[
     ESX Exports
 ]]
