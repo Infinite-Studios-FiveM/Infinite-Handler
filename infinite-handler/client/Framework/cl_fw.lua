@@ -34,7 +34,7 @@ function GetCurrentCharacter()
     return result;
 end
 
-exports('GetCurrentCharacter', GetCurrentCharacter
+exports('GetCurrentCharacter', GetCurrentCharacter)
 
 --[[
     ESX Exports
